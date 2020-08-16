@@ -1,7 +1,7 @@
 package com.company;
 
 import edu.princeton.cs.algs4.Picture;
-
+import java.lang.Math;
 public class SeamCarver {
     private int width;
     private int height;
@@ -26,6 +26,15 @@ public class SeamCarver {
 
     // energy of pixel at column x and row y
     public double energy(int x, int y)
+    {
+        this.checkValidate(x,y);
+        if(x==0||x==width-1||y==0||y==height-1){return 1000;}
+        else{
+            int a=gradX(x,y);
+            int b=gradY(x,y);
+            return Math.sqrt(a^2+b^2);
+        }
+    }
 
     // sequence of indices for horizontal seam
     public int[] findHorizontalSeam()
@@ -36,13 +45,27 @@ public class SeamCarver {
     // remove horizontal seam from current picture
     public void removeHorizontalSeam(int[] seam)
     {
+        if(this.height==1||this.width!=seam.length){throw new IllegalArgumentException();}
         this.checkValidate(seam);
+        for(int i=0;i<seam.length;i++){
+            if(i!=seam.length-1){
+                int k=seam[i]-seam[i+1];
+                if(k>1||k<(-1)){throw new IllegalArgumentException();}
+            }
+        }
     }
 
     // remove vertical seam from current picture
     public void removeVerticalSeam(int[] seam)
     {
+        if(this.width==1||this.height!=seam.length){throw new IllegalArgumentException();}
         this.checkValidate(seam);
+        for(int i=0;i<seam.length;i++){
+            if(i!=seam.length-1){
+                int k=seam[i]-seam[i+1];
+                if(k>1||k<(-1)){throw new IllegalArgumentException();}
+            }
+        }
     }
 
     private void checkValidate(Object a) {
@@ -57,7 +80,21 @@ public class SeamCarver {
             throw new IllegalArgumentException();
         }
     }
-    
+
+    private int gradX(int x, int y)
+    {
+        int a = picture.get(x-1,y).getRed()-picture.get(x+1,y).getRed();
+        int b = picture.get(x-1,y).getBlue()-picture.get(x+1,y).getBlue();
+        int c = picture.get(x-1,y).getGreen()-picture.get(x+1,y).getGreen();
+        return a^2+b^2+c^2;
+    }
+    private int gradY(int x, int y)
+    {
+        int a = picture.get(x,y-1).getRed()-picture.get(x,y+1).getRed();
+        int b = picture.get(x,y-1).getBlue()-picture.get(x,y+1).getBlue();
+        int c = picture.get(x,y-1).getGreen()-picture.get(x,y+1).getGreen();
+        return a^2+b^2+c^2;
+    }
     //  unit testing (optional)
     public static void main(String[] args){}
 }
