@@ -1,4 +1,4 @@
-package com.company;
+//package com.company;
 
 import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.IndexMinPQ;
@@ -32,10 +32,10 @@ public class SeamCarver {
             {
                 Point2D a = new Point2D(0,SC.height);
                 this.relax(a);
-                for(int i=0;i<SC.width;i++)
+                for(int i=0;i<SC.height-1;i++)
                 {
-                    for(int j=0;j<SC.height-1;j++)
-                    {this.relax(new Point2D(i,j));}
+                    for(int j=0;j<SC.width;j++)
+                    {this.relax(new Point2D(j,i));}
                 }
                 int mdis=0;
                 for (int i = 0; i < SC.width; i++) {
@@ -47,7 +47,7 @@ public class SeamCarver {
                 path[SC.height-1]=mdis;
                 for(int i=SC.height-2;i>=0;i--)
                 {
-                    path[i]=(int) edgeTo[path[i+1]][i].x();
+                    path[i]=(int) edgeTo[path[i+1]][i+1].x();
                 }
             }
             else{
@@ -60,7 +60,7 @@ public class SeamCarver {
                 }
                 int mdis=0;
                 for (int i = 0; i < SC.height; i++) {
-                    if (distTo[SC.height - 1][i] < distTo[SC.height - 1][mdis]) {
+                    if (distTo[SC.width - 1][i] < distTo[SC.width - 1][mdis]) {
                         mdis=i;
                     }
                 }
@@ -68,7 +68,7 @@ public class SeamCarver {
                 path[SC.width-1]=mdis;
                 for(int i=SC.width-2;i>=0;i--)
                 {
-                    path[i]=(int) edgeTo[i][path[i+1]].x();
+                    path[i]=(int) edgeTo[i+1][path[i+1]].y();
                 }
             }
 
@@ -80,6 +80,8 @@ public class SeamCarver {
                 int y = (int) e.y();
                 int a = (int) point.x();
                 int b = (int) point.y();
+//                System.out.println(point.toString());
+//                System.out.println(e.toString());
                 if (distTo[x][y] > distTo[a][b] + SC.energy(x, y)) {
                     distTo[x][y] = distTo[a][b] + SC.energy(x, y);
                     edgeTo[x][y] =  point;
@@ -98,6 +100,7 @@ public class SeamCarver {
                 }
                 if(y==SC.height-1){a.add(new Point2D(0,SC.height+1));}
                 else{
+                    if(SC.width==1){a.add(new Point2D(x,y+1)); return a;}
                     if(x==0){a.add(new Point2D(0,y+1)); a.add(new Point2D(1,y+1));}
                     else{
                     if(x==SC.width-1){a.add(new Point2D(SC.width-1,y+1)); a.add(new Point2D(SC.width-2,y+1));}
@@ -110,11 +113,12 @@ public class SeamCarver {
             }
             else{
                 if(x==SC.width){
-                    for(int i=0;i<SC.width;i++){a.add(new Point2D(0,i));}
+                    for(int i=0;i<SC.height;i++){a.add(new Point2D(0,i));}
                     return a;
                 }
                 if(x==SC.width-1){a.add(new Point2D(SC.width+1,0));}
                 else{
+                    if(SC.height==1){a.add(new Point2D(x+1,y)); return a;}
                     if(y==0){a.add(new Point2D(x+1,0)); a.add(new Point2D(x+1,1));}
                     else{
                         if(y==SC.height-1){a.add(new Point2D(x+1,SC.height-1)); a.add(new Point2D(x+1,SC.height-2));}
@@ -144,7 +148,7 @@ public class SeamCarver {
 
     // current picture
     public Picture picture()
-    {return this.picture;}
+    {return new Picture(this.picture);}
 
     // width of current picture
     public int width(){return this.width;}
@@ -160,7 +164,7 @@ public class SeamCarver {
         else{
             int a=gradX(x,y);
             int b=gradY(x,y);
-            return Math.sqrt(a^2+b^2);
+            return Math.sqrt(a+b);
         }
     }
 
@@ -181,15 +185,15 @@ public class SeamCarver {
     // remove horizontal seam from current picture
     public void removeHorizontalSeam(int[] seam)
     {
-        if(this.height==1||this.width!=seam.length){throw new IllegalArgumentException();}
-        this.checkValidate(seam);
+        if(this.height==1||this.width!=seam.length){throw new IllegalArgumentException("this.height==1||this.width!=seam.length");}
+        if(seam==null){throw new IllegalArgumentException();}
         for(int i=0;i<seam.length;i++){
             if(i!=seam.length-1){
                 int k=seam[i]-seam[i+1];
-                if(k>1||k<(-1)){throw new IllegalArgumentException();}
+                if(k>1||k<(-1)){throw new IllegalArgumentException("input seam invalid");}
             }
         }
-        int[] path = findHorizontalSeam();
+        int[] path = seam;
         Picture one = new Picture(width,height-1);
         for(int i=0;i<width;i++)
         {
@@ -208,14 +212,14 @@ public class SeamCarver {
     public void removeVerticalSeam(int[] seam)
     {
         if(this.width==1||this.height!=seam.length){throw new IllegalArgumentException();}
-        this.checkValidate(seam);
+        if(seam==null){throw new IllegalArgumentException();}
         for(int i=0;i<seam.length;i++){
             if(i!=seam.length-1){
                 int k=seam[i]-seam[i+1];
                 if(k>1||k<(-1)){throw new IllegalArgumentException();}
             }
         }
-        int[] path = findHorizontalSeam();
+        int[] path = seam;
         Picture one = new Picture(width-1,height);
         for(int i=0;i<height;i++)
         {
@@ -239,7 +243,7 @@ public class SeamCarver {
     {
         if(a<0 || b<0 || a>this.width-1 || b>this.height-1)
         {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalidate input int");
         }
     }
 
@@ -248,14 +252,14 @@ public class SeamCarver {
         int a = picture.get(x-1,y).getRed()-picture.get(x+1,y).getRed();
         int b = picture.get(x-1,y).getBlue()-picture.get(x+1,y).getBlue();
         int c = picture.get(x-1,y).getGreen()-picture.get(x+1,y).getGreen();
-        return a^2+b^2+c^2;
+        return a*a+b*b+c*c;
     }
     private int gradY(int x, int y)
     {
         int a = picture.get(x,y-1).getRed()-picture.get(x,y+1).getRed();
         int b = picture.get(x,y-1).getBlue()-picture.get(x,y+1).getBlue();
         int c = picture.get(x,y-1).getGreen()-picture.get(x,y+1).getGreen();
-        return a^2+b^2+c^2;
+        return a*a+b*b+c*c;
     }
     //  unit testing (optional)
     public static void main(String[] args){}
